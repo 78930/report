@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "CivicReport",
+    "slug": "civic-report",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1B4332"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.civicreport.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "CivicReport needs your location to pinpoint where the issue is occurring.",
+        "NSCameraUsageDescription": "CivicReport needs camera access to capture issue photos.",
+        "NSPhotoLibraryUsageDescription": "CivicReport needs photo library access to attach images to your report."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1B4332"
+      },
+      "package": "in.civicreport.app",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      
+    },
+    "web": {
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CivicReport to use your location to report issues accurately."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to attach to issue reports.",
+          "cameraPermission": "Allow camera access to capture issue photos."
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "API_BASE_URL": "https://api.civicreport.in",
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

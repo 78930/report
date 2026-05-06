@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+admin-panel/node_modules/
+admin-panel/.cache/
+node_modules/
+.cache/

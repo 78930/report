@@ -1,0 +1,20 @@
+{
+  "name": "civic-report",
+  "version": "1.0.0",
+  "description": "Full-stack civic issue reporting platform",
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:mobile && npm run install:admin",
+    "install:backend": "cd backend && npm install",
+    "install:mobile": "cd mobile && npm install",
+    "install:admin": "cd admin-panel && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin-panel && npm start",
+    "dev:mobile": "cd mobile && npx expo start",
+    "seed": "cd backend && npm run seed",
+    "build:admin": "cd admin-panel && npm run build",
+    "build:android:preview": "cd mobile && eas build --platform android --profile preview",
+    "build:android:production": "cd mobile && eas build --platform android --profile production",
+    "submit:android": "cd mobile && eas submit --platform android"
+  },
+  "private": true
+}

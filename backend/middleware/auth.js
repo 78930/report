@@ -1,0 +1,43 @@
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+exports.protect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Not authorized, no token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select('-password');
+
+    if (!req.user || !req.user.isActive) {
+      return res.status(401).json({ success: false, message: 'User not found or deactivated' });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Token is not valid' });
+  }
+};
+
+exports.adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ success: false, message: 'Admin access required' });
+  }
+};
+
+exports.officerOrAdmin = (req, res, next) => {
+  if (req.user && ['admin', 'department_officer'].includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ success: false, message: 'Officer or Admin access required' });
+  }
+};
