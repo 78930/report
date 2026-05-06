@@ -87,10 +87,28 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+const PORT = parseInt(process.env.PORT, 10) || 5000;
+
+const startServer = (port) => {
+  const s = app.listen(port, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+  });
+
+  s.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Trying port ${port + 1}...`);
+      // try the next port (simple retry strategy)
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+
+  return s;
+};
+
+const server = startServer(PORT);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
