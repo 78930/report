@@ -30,17 +30,24 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// OTP specific rate limit
-const otpLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 5,
-  message: { success: false, message: 'Too many OTP requests.' },
-});
-app.use('/api/auth/send-otp', otpLimiter);
+// OTP flow removed — no OTP-specific rate limiter needed.
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Catch invalid JSON body parse errors and return friendly message
+// Better JSON parse error handling: catch SyntaxError from body-parser
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  // body-parser sets err.type === 'entity.parse.failed' for some failures
+  const isBodyParserError = err.type === 'entity.parse.failed' || (err instanceof SyntaxError && err.status === 400 && 'body' in err);
+  if (isBodyParserError) {
+    console.warn('Invalid JSON payload received:', err.message);
+    return res.status(400).json({ success: false, message: 'Invalid JSON payload' });
+  }
+  next(err);
+});
 
 // Logging
 if (process.env.NODE_ENV !== 'test') {
@@ -89,9 +96,26 @@ app.use((err, req, res, next) => {
 
 const PORT = parseInt(process.env.PORT, 10) || 5000;
 
+const os = require('os');
+
 const startServer = (port) => {
-  const s = app.listen(port, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+  const host = '0.0.0.0';
+  const s = app.listen(port, host, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port} (bound to ${host})`);
+
+    // Log network interfaces for convenience
+    const nets = os.networkInterfaces();
+    const results = {};
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        // Skip non-IPv4 and internal
+        if (net.family === 'IPv4' && !net.internal) {
+          if (!results[name]) results[name] = [];
+          results[name].push(net.address);
+        }
+      }
+    }
+    console.log('Available network addresses:', JSON.stringify(results));
   });
 
   s.on('error', (err) => {
