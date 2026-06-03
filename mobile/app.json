@@ -57,7 +57,7 @@
     ],
     "extra": {
       "API_BASE_URL": "https://api.publicreport.in",
-      "privacyPolicyUrl": "https://publicreport.in/privacy-policy",
+      "privacyPolicyUrl": "https://publicreportsapp.netlify.app",
       "eas": {
         "projectId": "5ae585b6-64e7-4a51-a24b-16f1a197d2b4"
       }
