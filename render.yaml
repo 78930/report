@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: public-report-backend
+    env: docker
+    plan: free
+    disk: 512
+    region: oregon
+    repo: "https://github.com/78930/report.git"
+    branch: main
+    dockerfilePath: backend/Dockerfile
+    buildCommand: ""
+    startCommand: ""

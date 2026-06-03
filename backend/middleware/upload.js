@@ -28,7 +28,7 @@ const upload = multer({
   fileFilter,
 });
 
-const uploadToCloudinary = async (fileBuffer, folder = 'civic-report') => {
+const uploadToCloudinary = async (fileBuffer, folder = 'public-report') => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, resource_type: 'image', quality: 'auto', fetch_format: 'auto' },

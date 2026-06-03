@@ -1,0 +1,38 @@
+name: Deploy Admin Panel to Vercel
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'admin-panel/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install and build admin
+        working-directory: admin-panel
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN not set — skipping Vercel deploy";
+            exit 1;
+          fi
+          npm install -g vercel
+          cd admin-panel
+          # Deploy project; requires Vercel project already linked or will prompt to create.
+          vercel --prod --token $VERCEL_TOKEN --confirm

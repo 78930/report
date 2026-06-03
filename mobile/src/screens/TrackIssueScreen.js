@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
 import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG } from '../utils/constants';
 import { format } from 'date-fns';
@@ -13,6 +14,7 @@ const STATUS_STEPS = ['open', 'assigned', 'in_progress', 'resolved'];
 
 export default function TrackIssueScreen({ navigation }) {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [ticketId, setTicketId] = useState('');
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ export default function TrackIssueScreen({ navigation }) {
       const res = await issueAPI.getByTicket(ticketId.trim().toUpperCase());
       setIssue(res.data.issue);
     } catch {
-      Alert.alert('Not Found', `No issue found with ticket ID: ${ticketId.toUpperCase()}`);
+      Alert.alert(t('track_not_found'), t('track_not_found_msg', { ticketId: ticketId.toUpperCase() }));
     } finally {
       setLoading(false);
     }
@@ -38,16 +40,16 @@ export default function TrackIssueScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={s.navTitle}>Track Complaint</Text>
+        <Text style={s.navTitle}>{t('track_nav_title')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={s.content}>
-        <Text style={s.helperText}>Enter your ticket ID to check the current status of your complaint</Text>
+        <Text style={s.helperText}>{t('track_helper_text')}</Text>
         <View style={s.searchRow}>
           <TextInput
             style={s.input}
-            placeholder="e.g. CR-ROA-00001"
+            placeholder={t('track_input_placeholder')}
             placeholderTextColor={theme.colors.textSecondary}
             value={ticketId}
             onChangeText={setTicketId}
@@ -65,33 +67,32 @@ export default function TrackIssueScreen({ navigation }) {
               <Text style={s.ticketId}>{issue.ticketId}</Text>
               <View style={[s.statusBadge, { backgroundColor: STATUS_CONFIG[issue.status]?.bg }]}>
                 <Text style={[s.statusText, { color: STATUS_CONFIG[issue.status]?.color }]}>
-                  {STATUS_CONFIG[issue.status]?.label}
+                  {t(`status_${issue.status}`)}
                 </Text>
               </View>
             </View>
 
             <Text style={s.title}>{issue.title}</Text>
             <Text style={s.meta}>
-              📂 {CATEGORY_CONFIG[issue.category]?.label} · 📅 {format(new Date(issue.createdAt), 'dd MMM yyyy')}
+              📂 {t(`category_${issue.category}`)} · 📅 {format(new Date(issue.createdAt), 'dd MMM yyyy')}
             </Text>
             {issue.location?.address && <Text style={s.meta}>📍 {issue.location.address}</Text>}
             {issue.department && <Text style={s.meta}>🏢 {issue.department.name}</Text>}
-            {issue.assignedTo && <Text style={s.meta}>👷 Assigned to: {issue.assignedTo.name}</Text>}
-            {issue.resolvedAt && <Text style={s.meta}>✅ Resolved on {format(new Date(issue.resolvedAt), 'dd MMM yyyy')}</Text>}
+            {issue.assignedTo && <Text style={s.meta}>👷 {t('track_assigned_to', { name: issue.assignedTo.name })}</Text>}
+            {issue.resolvedAt && <Text style={s.meta}>{t('track_resolved_on', { date: format(new Date(issue.resolvedAt), 'dd MMM yyyy') })}</Text>}
 
             {/* Progress Steps */}
             <View style={s.stepsRow}>
               {STATUS_STEPS.map((st, i) => {
                 const currentIdx = STATUS_STEPS.indexOf(issue.status);
                 const done = i <= currentIdx;
-                const stCfg = STATUS_CONFIG[st];
                 return (
                   <React.Fragment key={st}>
                     <View style={s.step}>
                       <View style={[s.stepDot, done && { backgroundColor: COLORS.primary }]}>
                         {done && <Ionicons name="checkmark" size={12} color="#fff" />}
                       </View>
-                      <Text style={[s.stepLabel, done && { color: COLORS.primary, fontWeight: '600' }]}>{stCfg?.label}</Text>
+                      <Text style={[s.stepLabel, done && { color: COLORS.primary, fontWeight: '600' }]}>{t(`status_${st}`)}</Text>
                     </View>
                     {i < STATUS_STEPS.length - 1 && (
                       <View style={[s.stepLine, { backgroundColor: done && i < currentIdx ? COLORS.primary : theme.colors.border }]} />
@@ -105,7 +106,7 @@ export default function TrackIssueScreen({ navigation }) {
               style={s.viewFullBtn}
               onPress={() => navigation.navigate('IssueDetail', { issueId: issue._id })}
             >
-              <Text style={s.viewFullText}>View Full Details</Text>
+              <Text style={s.viewFullText}>{t('track_view_full')}</Text>
               <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
             </TouchableOpacity>
           </View>

@@ -1,7 +1,7 @@
 {
-  "name": "civic-report-backend",
+  "name": "public-report-backend",
   "version": "1.0.0",
-  "description": "CivicReport Backend API - Issue Reporting System",
+  "description": "PublicReport Backend API - Issue Reporting System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

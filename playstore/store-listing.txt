@@ -1,0 +1,122 @@
+===================================================
+  PUBLICREPORT — GOOGLE PLAY STORE LISTING
+  Copy-paste this into Google Play Console
+===================================================
+
+
+── APP DETAILS ──────────────────────────────────
+
+App name (30 chars max):
+  PublicReport
+
+Short description (80 chars max):
+  Report civic issues. Track resolution. Make your city better.
+
+Category:
+  Tools  (or  Social)
+
+Content rating:
+  Everyone
+
+
+── FULL DESCRIPTION (4000 chars max) ────────────
+
+PublicReport is your direct link to local government — report roads, water,
+electricity, garbage, drainage, and street-light issues in seconds and track
+every step of the resolution.
+
+🏙️ REPORT IN SECONDS
+• Pick the issue category (Road, Water, Electricity, Garbage, Drainage, Street Light)
+• Add a title, description, and up to 4 photos
+• Auto-detect your location with one tap
+• Set priority — Low, Medium, High, or Critical
+
+📍 REAL-TIME TRACKING
+• Every report gets a unique Ticket ID (e.g. CR-ROA-00001)
+• Live status timeline: Open → Assigned → In Progress → Resolved
+• Track any complaint by Ticket ID without logging in
+
+🗳️ COMMUNITY FEED
+• Browse all issues in your city
+• Upvote problems affecting your neighbourhood to push them up the priority queue
+• Leave comments and follow updates
+
+🌐 AVAILABLE IN 3 LANGUAGES
+• English  |  हिंदी  |  తెలుగు
+• Switch language anytime from the login screen or profile
+
+🔒 PRIVACY FIRST
+• Your phone number is never publicly visible
+• Location is captured only when you submit a report — never tracked in background
+• No ads, no data selling
+
+HOW IT WORKS
+1. Sign in with your mobile number
+2. Tap "Report an Issue" and fill in the details
+3. Submit — your report is instantly assigned to the right government department
+4. Get notified when the status changes
+5. Issue resolved? Rate the resolution!
+
+PublicReport bridges the gap between citizens and local government. Every report
+you submit helps make your city cleaner, safer, and better connected.
+
+
+── WHAT'S NEW (Release notes for version 1.0.0) ─
+
+🎉 First release of PublicReport!
+• Report civic issues in English, हिंदी, and తెలుగు
+• Real-time ticket tracking
+• Photo evidence upload
+• Community upvoting
+• Admin & officer portal for government departments
+
+
+── GRAPHIC ASSETS REQUIRED ──────────────────────
+
+Hi-res icon:       512 × 512 px  PNG  (no alpha / no rounded corners — Play adds them)
+Feature graphic:   1024 × 500 px PNG  (shown at top of store listing)
+Screenshots:       Min 2, recommended 4-8
+                   Phone: 1080 × 1920 px  or  any 16:9 / 9:16 ratio
+                   Use these scenes:
+                     1. Login screen (language selector visible)
+                     2. Home screen (city overview metrics)
+                     3. Report Issue form (category selection)
+                     4. Issue detail / status timeline
+                     5. Public feed / search
+
+Icon background color: #1B4332  (dark green)
+Icon foreground:       White shield-checkmark (Ionicons: shield-checkmark)
+
+
+── DATA SAFETY ANSWERS ──────────────────────────
+
+Does your app collect or share any of the required user data types?
+  YES
+
+Data collected:
+  • Name              — required, app functionality, not shared with third parties
+  • Phone number      — required, app functionality, not shared with third parties
+  • Photos/videos     — optional, app functionality, shared publicly (issue reports)
+  • Precise location  — optional, app functionality, not shared with third parties
+  • User content      — issue reports, comments (shared publicly in the app)
+
+Is the data encrypted in transit?
+  YES
+
+Can users request data deletion?
+  YES — via email: admin@publicreport.in
+
+
+── PRIVACY POLICY URL ───────────────────────────
+
+  https://publicreport.in/privacy-policy
+
+  (Host the file at: civic-report/privacy-policy.html)
+  Quick host option: upload to GitHub Pages or Netlify Drop (netlify.com/drop)
+
+
+── CONTACT DETAILS (for Play Console) ───────────
+
+Email:   admin@publicreport.in
+Website: https://publicreport.in
+Phone:   (optional — can leave blank)

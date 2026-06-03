@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LoginPage({ onLogin }) {
-  const [email, setEmail] = useState('admin@civicreport.in');
+  const { t, language, changeLanguage, languages } = useLanguage();
+  const [email, setEmail] = useState('admin@publicreport.in');
   const [password, setPassword] = useState('Admin@123');
   const [loading, setLoading] = useState(false);
 
@@ -13,9 +15,9 @@ export default function LoginPage({ onLogin }) {
     try {
       const res = await adminAPI.login(email, password);
       onLogin(res.data.token, res.data.user);
-      toast.success('Welcome back, Admin!');
+      toast.success(t('login_welcome'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || t('login_failed'));
     } finally {
       setLoading(false);
     }
@@ -24,25 +26,49 @@ export default function LoginPage({ onLogin }) {
   return (
     <div style={s.page}>
       <div style={s.card}>
+        {/* Language switcher on login page */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => changeLanguage(lang.code)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 20,
+                border: '1.5px solid',
+                borderColor: language === lang.code ? '#1B4332' : '#E5E7EB',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: language === lang.code ? 700 : 400,
+                background: language === lang.code ? '#1B4332' : '#fff',
+                color: language === lang.code ? '#fff' : '#6B7280',
+                fontFamily: 'Inter',
+              }}
+            >
+              {lang.nativeLabel}
+            </button>
+          ))}
+        </div>
+
         <div style={s.logo}>
           <span style={{ fontSize: 40 }}>🛡️</span>
-          <h1 style={s.title}>CivicReport</h1>
-          <p style={s.sub}>Admin & Officer Portal</p>
+          <h1 style={s.title}>{t('login_title')}</h1>
+          <p style={s.sub}>{t('login_subtitle')}</p>
         </div>
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.field}>
-            <label style={s.label}>Email Address</label>
+            <label style={s.label}>{t('login_email')}</label>
             <input style={s.input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div style={s.field}>
-            <label style={s.label}>Password</label>
+            <label style={s.label}>{t('login_password')}</label>
             <input style={s.input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <button type="submit" style={s.btn} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In →'}
+            {loading ? t('login_loading') : t('login_btn')}
           </button>
         </form>
-        <p style={s.hint}>Default: admin@civicreport.in / Admin@123</p>
+        <p style={s.hint}>{t('login_hint')}</p>
       </div>
     </div>
   );
@@ -50,7 +76,7 @@ export default function LoginPage({ onLogin }) {
 
 const s = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' },
-  card: { background: '#fff', borderRadius: 20, padding: 40, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
+  card: { background: '#fff', borderRadius: 20, padding: 40, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   logo: { textAlign: 'center', marginBottom: 32 },
   title: { fontSize: 28, fontWeight: 800, color: '#1B4332', margin: '8px 0 4px' },
   sub: { color: '#6B7280', fontSize: 14 },

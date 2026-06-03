@@ -7,6 +7,7 @@ import { TouchableOpacity } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS } from '../utils/constants';
 
 import LoginScreen from '../screens/LoginScreen';
@@ -23,6 +24,7 @@ const Tab = createBottomTabNavigator();
 
 function MainTabs() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Tab.Navigator
@@ -48,8 +50,8 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="Feed" component={PublicFeedScreen} options={{ title: 'Public Feed' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('tab_home') }} />
+      <Tab.Screen name="Feed" component={PublicFeedScreen} options={{ title: t('tab_feed') }} />
       <Tab.Screen
         name="Report"
         component={ReportIssueScreen}
@@ -59,8 +61,8 @@ function MainTabs() {
           tabBarIconStyle: { marginBottom: -6 },
         }}
       />
-      <Tab.Screen name="MyIssues" component={MyIssuesScreen} options={{ title: 'My Reports' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen name="MyIssues" component={MyIssuesScreen} options={{ title: t('tab_my_issues') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('tab_profile') }} />
     </Tab.Navigator>
   );
 }

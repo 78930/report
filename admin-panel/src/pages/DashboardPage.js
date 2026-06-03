@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { adminAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const STAT_COLORS = {
   open: '#EF4444', in_progress: '#3B82F6', resolved: '#10B981',
@@ -24,6 +25,7 @@ function StatCard({ label, value, icon, color, sub }) {
 }
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,18 +36,16 @@ export default function DashboardPage() {
     }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={s.loading}>Loading dashboard...</div>;
+  if (loading) return <div style={s.loading}>{t('dash_loading')}</div>;
 
   const { stats, categoryTrend } = data || {};
 
-  // Pie chart data from status
   const pieData = stats ? [
-    { name: 'Open', value: stats.openIssues, color: STAT_COLORS.open },
-    { name: 'In Progress', value: stats.inProgressIssues, color: STAT_COLORS.in_progress },
-    { name: 'Resolved', value: stats.resolvedIssues, color: STAT_COLORS.resolved },
+    { name: t('status_open'), value: stats.openIssues, color: STAT_COLORS.open },
+    { name: t('status_in_progress'), value: stats.inProgressIssues, color: STAT_COLORS.in_progress },
+    { name: t('status_resolved'), value: stats.resolvedIssues, color: STAT_COLORS.resolved },
   ] : [];
 
-  // Bar chart: group categoryTrend by date
   const barMap = {};
   (categoryTrend || []).forEach(({ _id, count }) => {
     if (!barMap[_id.date]) barMap[_id.date] = { date: _id.date };
@@ -57,27 +57,26 @@ export default function DashboardPage() {
   return (
     <div style={s.page}>
       <div style={s.header}>
-        <h1 style={s.pageTitle}>Dashboard</h1>
+        <h1 style={s.pageTitle}>{t('dash_title')}</h1>
         <p style={s.pageDate}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
 
       {/* Stat Cards */}
       <div style={s.statsGrid}>
-        <StatCard label="Total Issues" value={stats?.totalIssues} icon="📋" color="#6B7280" />
-        <StatCard label="Open" value={stats?.openIssues} icon="🔴" color="#EF4444" sub="Needs attention" />
-        <StatCard label="In Progress" value={stats?.inProgressIssues} icon="🔵" color="#3B82F6" sub="Being worked on" />
-        <StatCard label="Resolved" value={stats?.resolvedIssues} icon="✅" color="#10B981" sub={`${stats?.resolutionRate}% rate`} />
-        <StatCard label="Citizens" value={stats?.totalUsers} icon="👥" color="#8B5CF6" />
-        <StatCard label="Today" value={stats?.todayIssues} icon="📅" color="#F59E0B" sub="New reports today" />
-        <StatCard label="Avg Resolution" value={stats?.avgResolutionHours ? `${stats.avgResolutionHours}h` : 'N/A'} icon="⏱️" color="#06B6D4" />
-        <StatCard label="Escalations" value={stats?.escalations} icon="⚠️" color="#DC2626" sub="Need immediate action" />
+        <StatCard label={t('dash_total_issues')} value={stats?.totalIssues} icon="📋" color="#6B7280" />
+        <StatCard label={t('dash_open')} value={stats?.openIssues} icon="🔴" color="#EF4444" sub={t('dash_open_sub')} />
+        <StatCard label={t('dash_in_progress')} value={stats?.inProgressIssues} icon="🔵" color="#3B82F6" sub={t('dash_in_progress_sub')} />
+        <StatCard label={t('dash_resolved')} value={stats?.resolvedIssues} icon="✅" color="#10B981" sub={t('dash_resolved_sub', { rate: stats?.resolutionRate })} />
+        <StatCard label={t('dash_citizens')} value={stats?.totalUsers} icon="👥" color="#8B5CF6" />
+        <StatCard label={t('dash_today')} value={stats?.todayIssues} icon="📅" color="#F59E0B" sub={t('dash_today_sub')} />
+        <StatCard label={t('dash_avg_resolution')} value={stats?.avgResolutionHours ? `${stats.avgResolutionHours}h` : 'N/A'} icon="⏱️" color="#06B6D4" />
+        <StatCard label={t('dash_escalations')} value={stats?.escalations} icon="⚠️" color="#DC2626" sub={t('dash_escalations_sub')} />
       </div>
 
       {/* Charts */}
       <div style={s.chartsGrid}>
-        {/* Bar Chart */}
         <div style={s.chartCard}>
-          <h3 style={s.chartTitle}>Issues by Category (Last 7 Days)</h3>
+          <h3 style={s.chartTitle}>{t('dash_chart_category')}</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={barData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
@@ -85,15 +84,14 @@ export default function DashboardPage() {
               <Tooltip />
               <Legend />
               {categories.map((cat, i) => (
-                <Bar key={cat} dataKey={cat} stackId="a" fill={CAT_COLORS[i]} name={cat} />
+                <Bar key={cat} dataKey={cat} stackId="a" fill={CAT_COLORS[i]} name={t(`category_${cat}`)} />
               ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart */}
         <div style={s.chartCard}>
-          <h3 style={s.chartTitle}>Status Distribution</h3>
+          <h3 style={s.chartTitle}>{t('dash_chart_status')}</h3>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
@@ -107,13 +105,13 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div style={s.actionsRow}>
-        <h3 style={{ ...s.chartTitle, margin: 0 }}>Quick Actions</h3>
+        <h3 style={{ ...s.chartTitle, margin: 0 }}>{t('dash_quick_actions')}</h3>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
           {[
-            { label: '📋 View Open Issues', path: '/issues?status=open' },
-            { label: '⚠️ View Escalations', path: '/issues?escalated=true' },
-            { label: '👥 Manage Officers', path: '/users?role=department_officer' },
-            { label: '🏢 Departments', path: '/departments' },
+            { label: t('dash_action_open'), path: '/issues?status=open' },
+            { label: t('dash_action_escalations'), path: '/issues?escalated=true' },
+            { label: t('dash_action_officers'), path: '/users?role=department_officer' },
+            { label: t('dash_action_departments'), path: '/departments' },
           ].map((action) => (
             <a key={action.path} href={action.path} style={s.actionBtn}>{action.label}</a>
           ))}

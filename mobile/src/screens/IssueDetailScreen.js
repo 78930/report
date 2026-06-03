@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
 import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG, PRIORITY_CONFIG } from '../utils/constants';
 
@@ -14,6 +15,7 @@ export default function IssueDetailScreen({ route, navigation }) {
   const { issueId } = route.params;
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
@@ -28,14 +30,14 @@ export default function IssueDetailScreen({ route, navigation }) {
       const res = await issueAPI.getById(issueId);
       setIssue(res.data.issue);
     } catch {
-      Alert.alert('Error', 'Failed to load issue');
+      Alert.alert(t('report_error'), t('detail_load_error'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpvote = async () => {
-    if (!user) return Alert.alert('Login Required', 'Please login to upvote');
+    if (!user) return Alert.alert(t('detail_login_required'), t('detail_upvote_login_msg'));
     setUpvoting(true);
     try {
       const res = await issueAPI.upvote(issueId);
@@ -46,7 +48,7 @@ export default function IssueDetailScreen({ route, navigation }) {
 
   const handleComment = async () => {
     if (!comment.trim()) return;
-    if (!user) return Alert.alert('Login Required', 'Please login to comment');
+    if (!user) return Alert.alert(t('detail_login_required'), t('detail_comment_login_msg'));
     setCommenting(true);
     try {
       const res = await issueAPI.addComment(issueId, comment);
@@ -57,7 +59,7 @@ export default function IssueDetailScreen({ route, navigation }) {
   };
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
-  if (!issue) return <View style={s.center}><Text style={s.errorText}>Issue not found</Text></View>;
+  if (!issue) return <View style={s.center}><Text style={s.errorText}>{t('detail_issue_not_found')}</Text></View>;
 
   const catCfg = CATEGORY_CONFIG[issue.category] || CATEGORY_CONFIG.other;
   const statusCfg = STATUS_CONFIG[issue.status] || STATUS_CONFIG.open;
@@ -95,7 +97,7 @@ export default function IssueDetailScreen({ route, navigation }) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.issueTitle}>{issue.title}</Text>
-              <Text style={s.issueCat}>{catCfg.label}</Text>
+              <Text style={s.issueCat}>{t(`category_${issue.category}`)}</Text>
             </View>
           </View>
 
@@ -103,10 +105,10 @@ export default function IssueDetailScreen({ route, navigation }) {
           <View style={s.badgeRow}>
             <View style={[s.badge, { backgroundColor: statusCfg.bg }]}>
               <Ionicons name={statusCfg.icon} size={13} color={statusCfg.color} />
-              <Text style={[s.badgeText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
+              <Text style={[s.badgeText, { color: statusCfg.color }]}>{t(`status_${issue.status}`)}</Text>
             </View>
             <View style={[s.badge, { backgroundColor: priorityCfg.bg }]}>
-              <Text style={[s.badgeText, { color: priorityCfg.color }]}>{priorityCfg.label} Priority</Text>
+              <Text style={[s.badgeText, { color: priorityCfg.color }]}>{t(`priority_${issue.priority}`)} {t('detail_priority_suffix')}</Text>
             </View>
             <TouchableOpacity style={s.upvoteBtn} onPress={handleUpvote} disabled={upvoting}>
               <Ionicons name="arrow-up" size={14} color={COLORS.primary} />
@@ -131,7 +133,7 @@ export default function IssueDetailScreen({ route, navigation }) {
             )}
             <View style={s.metaRow}>
               <Ionicons name="person-outline" size={15} color={theme.colors.textSecondary} />
-              <Text style={s.metaText}>Reported by {issue.reportedBy?.name}</Text>
+              <Text style={s.metaText}>{t('detail_reported_by', { name: issue.reportedBy?.name })}</Text>
             </View>
             <View style={s.metaRow}>
               <Ionicons name="time-outline" size={15} color={theme.colors.textSecondary} />
@@ -146,19 +148,18 @@ export default function IssueDetailScreen({ route, navigation }) {
             {issue.assignedTo && (
               <View style={s.metaRow}>
                 <Ionicons name="construct-outline" size={15} color={theme.colors.textSecondary} />
-                <Text style={s.metaText}>Assigned to: {issue.assignedTo.name}</Text>
+                <Text style={s.metaText}>{t('detail_assigned_to', { name: issue.assignedTo.name })}</Text>
               </View>
             )}
           </View>
 
           {/* Status Timeline */}
-          <Text style={s.sectionTitle}>Status Timeline</Text>
+          <Text style={s.sectionTitle}>{t('detail_status_timeline')}</Text>
           <View style={s.timeline}>
             {STATUS_ORDER.map((st, i) => {
               const stepIndex = STATUS_ORDER.indexOf(issue.status);
               const isCompleted = i <= stepIndex;
               const isCurrent = i === stepIndex;
-              const stCfg = STATUS_CONFIG[st];
               return (
                 <View key={st} style={s.timelineStep}>
                   <View style={{ alignItems: 'center' }}>
@@ -168,7 +169,7 @@ export default function IssueDetailScreen({ route, navigation }) {
                     {i < STATUS_ORDER.length - 1 && <View style={[s.timelineLine, { backgroundColor: isCompleted ? COLORS.primary : theme.colors.border }]} />}
                   </View>
                   <View style={s.timelineContent}>
-                    <Text style={[s.timelineLabel, isCurrent && { color: COLORS.primary, fontWeight: '700' }]}>{stCfg?.label}</Text>
+                    <Text style={[s.timelineLabel, isCurrent && { color: COLORS.primary, fontWeight: '700' }]}>{t(`status_${st}`)}</Text>
                     {isCurrent && issue.updatedAt && (
                       <Text style={s.timelineDate}>{format(new Date(issue.updatedAt), 'dd MMM yyyy')}</Text>
                     )}
@@ -179,11 +180,11 @@ export default function IssueDetailScreen({ route, navigation }) {
           </View>
 
           {/* Comments */}
-          <Text style={s.sectionTitle}>Updates & Comments ({issue.comments?.length || 0})</Text>
+          <Text style={s.sectionTitle}>{t('detail_comments_title', { count: issue.comments?.length || 0 })}</Text>
           {issue.comments?.map((c, i) => (
             <View key={i} style={[s.comment, c.isOfficialResponse && s.officialComment]}>
               {c.isOfficialResponse && (
-                <View style={s.officialBadge}><Text style={s.officialBadgeText}>Official Response</Text></View>
+                <View style={s.officialBadge}><Text style={s.officialBadgeText}>{t('detail_official_response')}</Text></View>
               )}
               <Text style={s.commentAuthor}>{c.user?.name}</Text>
               <Text style={s.commentText}>{c.text}</Text>
@@ -196,7 +197,7 @@ export default function IssueDetailScreen({ route, navigation }) {
             <View style={s.commentBox}>
               <TextInput
                 style={s.commentInput}
-                placeholder="Add a comment..."
+                placeholder={t('detail_comment_placeholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={comment}
                 onChangeText={setComment}

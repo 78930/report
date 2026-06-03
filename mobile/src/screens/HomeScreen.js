@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
 import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG } from '../utils/constants';
 
@@ -17,12 +18,12 @@ const MetricCard = ({ label, value, color, icon, theme }) => (
   </View>
 );
 
-const CategoryChip = ({ cat, count, onPress, theme }) => {
+const CategoryChip = ({ cat, count, label, onPress, theme }) => {
   const cfg = CATEGORY_CONFIG[cat];
   return (
     <TouchableOpacity style={[homeStyles(theme).catChip, { backgroundColor: cfg.bg }]} onPress={onPress}>
       <Ionicons name={cfg.icon} size={18} color={cfg.color} />
-      <Text style={[homeStyles(theme).catLabel, { color: cfg.color }]}>{cfg.label}</Text>
+      <Text style={[homeStyles(theme).catLabel, { color: cfg.color }]}>{label}</Text>
       {count ? <View style={[homeStyles(theme).catBadge, { backgroundColor: cfg.color }]}><Text style={homeStyles(theme).catBadgeText}>{count}</Text></View> : null}
     </TouchableOpacity>
   );
@@ -31,6 +32,7 @@ const CategoryChip = ({ cat, count, onPress, theme }) => {
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [metrics, setMetrics] = useState(null);
   const [recentIssues, setRecentIssues] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,8 +71,8 @@ export default function HomeScreen({ navigation }) {
         {/* Header */}
         <View style={s.header}>
           <View>
-            <Text style={s.greeting}>Hello, {user?.name?.split(' ')[0]} 👋</Text>
-            <Text style={s.subGreeting}>{user?.ward || 'Your City'}</Text>
+            <Text style={s.greeting}>{t('home_greeting', { name: user?.name?.split(' ')[0] || '' })}</Text>
+            <Text style={s.subGreeting}>{user?.ward || t('home_your_city')}</Text>
           </View>
           <View style={s.headerActions}>
             <TouchableOpacity onPress={toggleTheme} style={s.iconBtn}>
@@ -87,8 +89,8 @@ export default function HomeScreen({ navigation }) {
           <View style={s.reportBtnLeft}>
             <Ionicons name="add-circle" size={28} color={COLORS.white} />
             <View style={{ marginLeft: 12 }}>
-              <Text style={s.reportBtnTitle}>Report an Issue</Text>
-              <Text style={s.reportBtnSub}>Roads, water, power & more</Text>
+              <Text style={s.reportBtnTitle}>{t('home_report_btn')}</Text>
+              <Text style={s.reportBtnSub}>{t('home_report_sub')}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={22} color={COLORS.white} />
@@ -97,25 +99,26 @@ export default function HomeScreen({ navigation }) {
         {/* Track Ticket */}
         <TouchableOpacity style={s.trackBtn} onPress={() => navigation.navigate('TrackIssue')}>
           <Ionicons name="search" size={18} color={COLORS.primary} />
-          <Text style={s.trackText}>Track by Ticket ID (e.g. CR-ROA-00001)</Text>
+          <Text style={s.trackText}>{t('home_track_btn')}</Text>
         </TouchableOpacity>
 
         {/* Metrics */}
-        <Text style={s.sectionTitle}>City Overview</Text>
+        <Text style={s.sectionTitle}>{t('home_city_overview')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.metricsRow}>
-          <MetricCard label="Open" value={m.open || 0} color={COLORS.statusOpen} icon="alert-circle" theme={theme} />
-          <MetricCard label="In Progress" value={m.in_progress || 0} color={COLORS.statusInProgress} icon="construct" theme={theme} />
-          <MetricCard label="Resolved" value={m.resolved || 0} color={COLORS.statusResolved} icon="checkmark-circle" theme={theme} />
-          <MetricCard label="Total" value={metrics?.total || 0} color={COLORS.primary} icon="layers" theme={theme} />
+          <MetricCard label={t('home_open')} value={m.open || 0} color={COLORS.statusOpen} icon="alert-circle" theme={theme} />
+          <MetricCard label={t('home_in_progress')} value={m.in_progress || 0} color={COLORS.statusInProgress} icon="construct" theme={theme} />
+          <MetricCard label={t('home_resolved')} value={m.resolved || 0} color={COLORS.statusResolved} icon="checkmark-circle" theme={theme} />
+          <MetricCard label={t('home_total')} value={metrics?.total || 0} color={COLORS.primary} icon="layers" theme={theme} />
         </ScrollView>
 
         {/* Categories */}
-        <Text style={s.sectionTitle}>Browse by Category</Text>
+        <Text style={s.sectionTitle}>{t('home_browse_category')}</Text>
         <View style={s.categoriesGrid}>
           {Object.keys(CATEGORY_CONFIG).map((cat) => (
             <CategoryChip
               key={cat}
               cat={cat}
+              label={t(`category_${cat}`)}
               count={metrics?.byCategory?.[cat]}
               onPress={() => navigation.navigate('PublicFeed', { category: cat })}
               theme={theme}
@@ -125,9 +128,9 @@ export default function HomeScreen({ navigation }) {
 
         {/* Recent Issues */}
         <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>Recent Reports</Text>
+          <Text style={s.sectionTitle}>{t('home_recent_reports')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('PublicFeed')}>
-            <Text style={s.seeAll}>See all</Text>
+            <Text style={s.seeAll}>{t('home_see_all')}</Text>
           </TouchableOpacity>
         </View>
         {recentIssues.map((issue) => (
@@ -140,11 +143,11 @@ export default function HomeScreen({ navigation }) {
             <View style={s.issueCardContent}>
               <Text style={s.issueTitle} numberOfLines={1}>{issue.title}</Text>
               <View style={s.issueMeta}>
-                <Text style={s.issueMetaText}>{CATEGORY_CONFIG[issue.category]?.label}</Text>
+                <Text style={s.issueMetaText}>{t(`category_${issue.category}`)}</Text>
                 <Text style={s.issueDot}>·</Text>
                 <View style={[s.statusBadge, { backgroundColor: STATUS_CONFIG[issue.status]?.bg }]}>
                   <Text style={[s.statusText, { color: STATUS_CONFIG[issue.status]?.color }]}>
-                    {STATUS_CONFIG[issue.status]?.label}
+                    {t(`status_${issue.status}`)}
                   </Text>
                 </View>
               </View>

@@ -1,16 +1,17 @@
-// MyIssuesScreen.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
 import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG } from '../utils/constants';
 
 export default function MyIssuesScreen({ navigation }) {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,9 +32,9 @@ export default function MyIssuesScreen({ navigation }) {
   if (!user) return (
     <View style={[s.center, { backgroundColor: theme.colors.background }]}>
       <Ionicons name="person-circle-outline" size={64} color={theme.colors.textSecondary} />
-      <Text style={{ color: theme.colors.text, fontSize: 16, marginTop: 12 }}>Login to see your reports</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 16, marginTop: 12 }}>{t('my_login_prompt')}</Text>
       <TouchableOpacity style={s.loginBtn} onPress={() => navigation.navigate('Auth')}>
-        <Text style={s.loginBtnText}>Login</Text>
+        <Text style={s.loginBtnText}>{t('my_login_btn')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -42,7 +43,7 @@ export default function MyIssuesScreen({ navigation }) {
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <View style={s.filterRow}>
         {STATUS_FILTERS.map((st) => {
-          const label = st ? STATUS_CONFIG[st]?.label : 'All';
+          const label = st ? t(`status_${st}`) : t('my_all');
           return (
             <TouchableOpacity key={st} style={[s.chip, filterStatus === st && s.chipActive]} onPress={() => setFilterStatus(st)}>
               <Text style={[s.chipText, filterStatus === st && s.chipTextActive]}>{label}</Text>
@@ -57,7 +58,15 @@ export default function MyIssuesScreen({ navigation }) {
           keyExtractor={(i) => i._id}
           contentContainerStyle={s.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchMyIssues(); }} tintColor={COLORS.primary} />}
-          ListEmptyComponent={<View style={s.empty}><Ionicons name="clipboard-outline" size={48} color={theme.colors.textSecondary} /><Text style={{ color: theme.colors.textSecondary, marginTop: 12, fontSize: 15 }}>No issues reported yet</Text><TouchableOpacity style={s.reportNewBtn} onPress={() => navigation.navigate('ReportIssue')}><Text style={s.reportNewText}>Report an Issue</Text></TouchableOpacity></View>}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Ionicons name="clipboard-outline" size={48} color={theme.colors.textSecondary} />
+              <Text style={{ color: theme.colors.textSecondary, marginTop: 12, fontSize: 15 }}>{t('my_no_issues')}</Text>
+              <TouchableOpacity style={s.reportNewBtn} onPress={() => navigation.navigate('ReportIssue')}>
+                <Text style={s.reportNewText}>{t('my_report_new')}</Text>
+              </TouchableOpacity>
+            </View>
+          }
           renderItem={({ item }) => {
             const catCfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.other;
             const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.open;
@@ -71,7 +80,7 @@ export default function MyIssuesScreen({ navigation }) {
                   <Text style={s.ticket}>{item.ticketId}</Text>
                   <View style={s.row}>
                     <View style={[s.statusBadge, { backgroundColor: statusCfg.bg }]}>
-                      <Text style={[s.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
+                      <Text style={[s.statusText, { color: statusCfg.color }]}>{t(`status_${item.status}`)}</Text>
                     </View>
                     <Text style={s.date}>{format(new Date(item.createdAt), 'dd MMM yyyy')}</Text>
                   </View>

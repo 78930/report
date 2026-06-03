@@ -1,5 +1,5 @@
 {
-  "name": "civic-report-admin",
+  "name": "public-report-admin",
   "version": "1.0.0",
   "private": true,
   "dependencies": {

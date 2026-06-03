@@ -21,7 +21,7 @@ exports.createIssue = async (req, res) => {
     // Upload images to Cloudinary
     let images = [];
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((f) => uploadToCloudinary(f.buffer, 'civic-report/issues'));
+      const uploadPromises = req.files.map((f) => uploadToCloudinary(f.buffer, 'public-report/issues'));
       images = await Promise.all(uploadPromises);
     }
 

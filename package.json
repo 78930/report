@@ -1,7 +1,7 @@
 {
-  "name": "civic-report",
+  "name": "public-report",
   "version": "1.0.0",
-  "description": "Full-stack civic issue reporting platform",
+  "description": "Full-stack public issue reporting platform",
   "scripts": {
     "install:all": "npm run install:backend && npm run install:mobile && npm run install:admin",
     "install:backend": "cd backend && npm install",

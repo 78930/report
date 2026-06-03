@@ -1,10 +1,11 @@
-// UsersPage.js
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export function UsersPage() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [roleFilter, setRoleFilter] = useState('');
@@ -30,34 +31,47 @@ export function UsersPage() {
   const handleToggle = async (id) => {
     try {
       const res = await adminAPI.toggleUser(id);
-      toast.success(`User ${res.data.isActive ? 'activated' : 'deactivated'}`);
+      toast.success(t('users_toggle_success', { action: res.data.isActive ? 'activate' : 'deactivate' }));
       fetchUsers();
-    } catch { toast.error('Toggle failed'); }
+    } catch { toast.error(t('users_toggle_error')); }
   };
 
   const handleCreateOfficer = async (e) => {
     e.preventDefault();
     try {
       await adminAPI.createOfficer(newOfficer);
-      toast.success('Officer created successfully!');
+      toast.success(t('users_create_success'));
       setShowCreateForm(false);
       setNewOfficer({ name: '', phone: '', email: '', password: '', department: '' });
       fetchUsers();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to create officer'); }
+    } catch (err) { toast.error(err.response?.data?.message || t('users_create_error')); }
   };
+
+  const formFields = [
+    [t('users_name'), 'name', 'text'],
+    [t('users_phone'), 'phone', 'tel'],
+    [t('users_email'), 'email', 'email'],
+    [t('users_password'), 'password', 'password'],
+  ];
+
+  const TABLE_HEADERS = [
+    t('users_col_name'), t('users_col_phone'), t('users_col_role'),
+    t('users_col_department'), t('users_col_ward'), t('users_col_joined'),
+    t('users_col_status'), t('users_col_actions'),
+  ];
 
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827' }}>User Management</h1>
-          <p style={{ color: '#6B7280', fontSize: 14 }}>{total} total users</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827' }}>{t('users_title')}</h1>
+          <p style={{ color: '#6B7280', fontSize: 14 }}>{t('users_total', { total })}</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
           style={{ padding: '10px 18px', background: '#1B4332', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
         >
-          + Add Officer
+          {t('users_add_officer')}
         </button>
       </div>
 
@@ -65,9 +79,9 @@ export function UsersPage() {
       {showCreateForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: 20, padding: 32, width: 440 }}>
-            <h3 style={{ fontWeight: 800, marginBottom: 20 }}>Create Department Officer</h3>
+            <h3 style={{ fontWeight: 800, marginBottom: 20 }}>{t('users_modal_title')}</h3>
             <form onSubmit={handleCreateOfficer} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[['Name', 'name', 'text'], ['Phone (10-digit)', 'phone', 'tel'], ['Email', 'email', 'email'], ['Password', 'password', 'password']].map(([label, key, type]) => (
+              {formFields.map(([label, key, type]) => (
                 <div key={key}>
                   <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>{label}</label>
                   <input
@@ -80,20 +94,20 @@ export function UsersPage() {
                 </div>
               ))}
               <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>Department</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>{t('users_department')}</label>
                 <select
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, fontFamily: 'Inter' }}
                   value={newOfficer.department}
                   onChange={(e) => setNewOfficer((f) => ({ ...f, department: e.target.value }))}
                   required
                 >
-                  <option value="">Select Department</option>
+                  <option value="">{t('users_select_dept')}</option>
                   {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                <button type="submit" style={{ flex: 1, padding: '11px', background: '#1B4332', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Create Officer</button>
-                <button type="button" onClick={() => setShowCreateForm(false)} style={{ flex: 1, padding: '11px', background: '#F3F4F6', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: '11px', background: '#1B4332', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>{t('users_create_btn')}</button>
+                <button type="button" onClick={() => setShowCreateForm(false)} style={{ flex: 1, padding: '11px', background: '#F3F4F6', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>{t('users_cancel')}</button>
               </div>
             </form>
           </div>
@@ -117,7 +131,7 @@ export function UsersPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
             <tr>
-              {['Name', 'Phone', 'Role', 'Department', 'Ward', 'Joined', 'Status', 'Actions'].map((h) => (
+              {TABLE_HEADERS.map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>{h}</th>
               ))}
             </tr>
@@ -147,12 +161,12 @@ export function UsersPage() {
                 <td style={{ padding: '12px 16px', fontSize: 12, color: '#9CA3AF' }}>{format(new Date(user.createdAt), 'dd MMM yy')}</td>
                 <td style={{ padding: '12px 16px' }}>
                   <span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: user.isActive ? '#D1FAE5' : '#FEE2E2', color: user.isActive ? '#059669' : '#DC2626' }}>
-                    {user.isActive ? 'Active' : 'Inactive'}
+                    {user.isActive ? t('users_active') : t('users_inactive')}
                   </span>
                 </td>
                 <td style={{ padding: '12px 16px' }}>
                   <button onClick={() => handleToggle(user._id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #E5E7EB', background: '#fff', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
-                    {user.isActive ? 'Deactivate' : 'Activate'}
+                    {user.isActive ? t('users_deactivate') : t('users_activate')}
                   </button>
                 </td>
               </tr>

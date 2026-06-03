@@ -7,14 +7,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
 import { COLORS, CATEGORY_CONFIG, PRIORITY_CONFIG } from '../utils/constants';
 
-const CATEGORIES = Object.entries(CATEGORY_CONFIG).map(([k, v]) => ({ value: k, ...v }));
-const PRIORITIES = Object.entries(PRIORITY_CONFIG).map(([k, v]) => ({ value: k, ...v }));
-
 export default function ReportIssueScreen({ navigation }) {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     title: '', description: '', category: '', priority: 'medium',
     locationAddress: '', ward: '', landmark: '',
@@ -25,12 +24,15 @@ export default function ReportIssueScreen({ navigation }) {
   const [submitting, setSubmitting] = useState(false);
   const s = styles(theme);
 
+  const CATEGORIES = Object.entries(CATEGORY_CONFIG).map(([k, v]) => ({ value: k, ...v, label: t(`category_${k}`) }));
+  const PRIORITIES = Object.entries(PRIORITY_CONFIG).map(([k, v]) => ({ value: k, ...v, label: t(`priority_${k}`) }));
+
   const getLocation = async () => {
     setLoadingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is needed to pin the issue location.');
+        Alert.alert(t('report_permission_denied'), t('report_location_permission_msg'));
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
@@ -46,7 +48,7 @@ export default function ReportIssueScreen({ navigation }) {
         setForm((f) => ({ ...f, locationAddress: addr, ward: g.subregion || f.ward }));
       }
     } catch (err) {
-      Alert.alert('Error', 'Could not get your location. Please enter manually.');
+      Alert.alert(t('report_error'), t('report_location_error_msg'));
     } finally {
       setLoadingLocation(false);
     }
@@ -54,26 +56,26 @@ export default function ReportIssueScreen({ navigation }) {
 
   const pickImage = async () => {
     if (images.length >= 4) {
-      Alert.alert('Limit Reached', 'Maximum 4 images allowed');
+      Alert.alert(t('report_limit_reached'), t('report_max_images_msg'));
       return;
     }
-    Alert.alert('Add Photo', 'Choose source', [
-      { text: 'Camera', onPress: () => launchCamera() },
-      { text: 'Gallery', onPress: () => launchGallery() },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('report_add_photo_title'), t('report_choose_source'), [
+      { text: t('report_camera'), onPress: () => launchCamera() },
+      { text: t('report_gallery'), onPress: () => launchGallery() },
+      { text: t('report_cancel'), style: 'cancel' },
     ]);
   };
 
   const launchCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') return Alert.alert('Permission needed', 'Camera access is required.');
+    if (status !== 'granted') return Alert.alert(t('report_permission_needed'), t('report_camera_permission_msg'));
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, allowsEditing: true });
     if (!result.canceled) setImages((imgs) => [...imgs, result.assets[0]]);
   };
 
   const launchGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return Alert.alert('Permission needed', 'Gallery access is required.');
+    if (status !== 'granted') return Alert.alert(t('report_permission_needed'), t('report_gallery_permission_msg'));
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, allowsMultipleSelection: true, selectionLimit: 4 - images.length });
     if (!result.canceled) setImages((imgs) => [...imgs, ...result.assets].slice(0, 4));
   };
@@ -81,16 +83,16 @@ export default function ReportIssueScreen({ navigation }) {
   const removeImage = (idx) => setImages((imgs) => imgs.filter((_, i) => i !== idx));
 
   const validate = () => {
-    if (!form.title.trim()) return 'Please enter an issue title';
-    if (!form.category) return 'Please select a category';
-    if (!form.description.trim()) return 'Please describe the issue';
-    if (!form.locationAddress.trim()) return 'Please provide a location';
+    if (!form.title.trim()) return t('report_validation_title');
+    if (!form.category) return t('report_validation_category');
+    if (!form.description.trim()) return t('report_validation_description');
+    if (!form.locationAddress.trim()) return t('report_validation_location');
     return null;
   };
 
   const handleSubmit = async () => {
     const err = validate();
-    if (err) return Alert.alert('Missing Information', err);
+    if (err) return Alert.alert(t('report_missing_info'), err);
 
     setSubmitting(true);
     try {
@@ -110,13 +112,13 @@ export default function ReportIssueScreen({ navigation }) {
 
       const res = await issueAPI.create(formData);
       Alert.alert(
-        '✅ Issue Reported!',
-        `Your ticket ID is: ${res.data.issue.ticketId}\n\nSave this for tracking.`,
-        [{ text: 'Track Issue', onPress: () => navigation.navigate('IssueDetail', { issueId: res.data.issue._id }) },
-         { text: 'Go Home', onPress: () => navigation.navigate('Home') }]
+        t('report_success_title'),
+        t('report_success_msg', { ticketId: res.data.issue.ticketId }),
+        [{ text: t('report_track_issue'), onPress: () => navigation.navigate('IssueDetail', { issueId: res.data.issue._id }) },
+         { text: t('report_go_home'), onPress: () => navigation.navigate('Home') }]
       );
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to submit issue');
+      Alert.alert(t('report_error'), err.response?.data?.message || t('report_submit_error'));
     } finally {
       setSubmitting(false);
     }
@@ -128,13 +130,13 @@ export default function ReportIssueScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={s.navTitle}>Report Issue</Text>
+        <Text style={s.navTitle}>{t('report_nav_title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         {/* Category Selection */}
-        <Text style={s.label}>Issue Type <Text style={s.required}>*</Text></Text>
+        <Text style={s.label}>{t('report_issue_type')} <Text style={s.required}>*</Text></Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.catRow}>
           {CATEGORIES.map((cat) => (
             <TouchableOpacity
@@ -149,10 +151,10 @@ export default function ReportIssueScreen({ navigation }) {
         </ScrollView>
 
         {/* Title */}
-        <Text style={s.label}>Title <Text style={s.required}>*</Text></Text>
+        <Text style={s.label}>{t('report_title_label')} <Text style={s.required}>*</Text></Text>
         <TextInput
           style={s.input}
-          placeholder="Brief title of the issue..."
+          placeholder={t('report_title_placeholder')}
           placeholderTextColor={theme.colors.textSecondary}
           value={form.title}
           onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
@@ -160,10 +162,10 @@ export default function ReportIssueScreen({ navigation }) {
         />
 
         {/* Description */}
-        <Text style={s.label}>Description <Text style={s.required}>*</Text></Text>
+        <Text style={s.label}>{t('report_description_label')} <Text style={s.required}>*</Text></Text>
         <TextInput
           style={[s.input, s.textArea]}
-          placeholder="Describe the problem in detail..."
+          placeholder={t('report_description_placeholder')}
           placeholderTextColor={theme.colors.textSecondary}
           value={form.description}
           onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
@@ -173,7 +175,7 @@ export default function ReportIssueScreen({ navigation }) {
         />
 
         {/* Priority */}
-        <Text style={s.label}>Priority</Text>
+        <Text style={s.label}>{t('report_priority_label')}</Text>
         <View style={s.priorityRow}>
           {PRIORITIES.map((p) => (
             <TouchableOpacity
@@ -187,7 +189,7 @@ export default function ReportIssueScreen({ navigation }) {
         </View>
 
         {/* Location */}
-        <Text style={s.label}>Location <Text style={s.required}>*</Text></Text>
+        <Text style={s.label}>{t('report_location_label')} <Text style={s.required}>*</Text></Text>
         <TouchableOpacity style={s.gpsBtn} onPress={getLocation} disabled={loadingLocation}>
           {loadingLocation ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
@@ -195,25 +197,25 @@ export default function ReportIssueScreen({ navigation }) {
             <Ionicons name="locate" size={20} color={COLORS.primary} />
           )}
           <Text style={s.gpsBtnText}>
-            {coords ? '📍 Location detected — tap to update' : 'Use My Current Location'}
+            {coords ? t('report_location_detected') : t('report_use_location')}
           </Text>
         </TouchableOpacity>
 
         <TextInput
           style={s.input}
-          placeholder="Full address / area"
+          placeholder={t('report_address_placeholder')}
           placeholderTextColor={theme.colors.textSecondary}
           value={form.locationAddress}
           onChangeText={(v) => setForm((f) => ({ ...f, locationAddress: v }))}
         />
         <View style={s.row}>
-          <TextInput style={[s.input, { flex: 1 }]} placeholder="Ward (e.g. Ward 45)" placeholderTextColor={theme.colors.textSecondary} value={form.ward} onChangeText={(v) => setForm((f) => ({ ...f, ward: v }))} />
+          <TextInput style={[s.input, { flex: 1 }]} placeholder={t('report_ward_placeholder')} placeholderTextColor={theme.colors.textSecondary} value={form.ward} onChangeText={(v) => setForm((f) => ({ ...f, ward: v }))} />
           <View style={{ width: 8 }} />
-          <TextInput style={[s.input, { flex: 1 }]} placeholder="Landmark (optional)" placeholderTextColor={theme.colors.textSecondary} value={form.landmark} onChangeText={(v) => setForm((f) => ({ ...f, landmark: v }))} />
+          <TextInput style={[s.input, { flex: 1 }]} placeholder={t('report_landmark_placeholder')} placeholderTextColor={theme.colors.textSecondary} value={form.landmark} onChangeText={(v) => setForm((f) => ({ ...f, landmark: v }))} />
         </View>
 
         {/* Images */}
-        <Text style={s.label}>Photos ({images.length}/4)</Text>
+        <Text style={s.label}>{t('report_photos_label', { count: images.length })}</Text>
         <View style={s.imagesGrid}>
           {images.map((img, i) => (
             <View key={i} style={s.imgThumb}>
@@ -226,7 +228,7 @@ export default function ReportIssueScreen({ navigation }) {
           {images.length < 4 && (
             <TouchableOpacity style={s.addImgBtn} onPress={pickImage}>
               <Ionicons name="camera-outline" size={28} color={theme.colors.textSecondary} />
-              <Text style={s.addImgText}>Add Photo</Text>
+              <Text style={s.addImgText}>{t('report_add_photo')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -238,7 +240,7 @@ export default function ReportIssueScreen({ navigation }) {
           ) : (
             <>
               <Ionicons name="send" size={20} color="#fff" />
-              <Text style={s.submitText}>Submit Report</Text>
+              <Text style={s.submitText}>{t('report_submit')}</Text>
             </>
           )}
         </TouchableOpacity>

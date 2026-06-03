@@ -1,4 +1,3 @@
-// PublicFeedScreen.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
@@ -7,10 +6,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { issueAPI } from '../services/api';
-import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG, PRIORITY_CONFIG } from '../utils/constants';
+import { COLORS, CATEGORY_CONFIG, STATUS_CONFIG } from '../utils/constants';
 
-const IssueCard = ({ issue, onPress, theme }) => {
+const IssueCard = ({ issue, onPress, theme, t }) => {
   const catCfg = CATEGORY_CONFIG[issue.category] || CATEGORY_CONFIG.other;
   const statusCfg = STATUS_CONFIG[issue.status] || STATUS_CONFIG.open;
   const s = cardStyles(theme);
@@ -19,10 +19,10 @@ const IssueCard = ({ issue, onPress, theme }) => {
       <View style={s.top}>
         <View style={[s.catBadge, { backgroundColor: catCfg.bg }]}>
           <Ionicons name={catCfg.icon} size={14} color={catCfg.color} />
-          <Text style={[s.catText, { color: catCfg.color }]}>{catCfg.label}</Text>
+          <Text style={[s.catText, { color: catCfg.color }]}>{t(`category_${issue.category}`)}</Text>
         </View>
         <View style={[s.statusBadge, { backgroundColor: statusCfg.bg }]}>
-          <Text style={[s.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
+          <Text style={[s.statusText, { color: statusCfg.color }]}>{t(`status_${issue.status}`)}</Text>
         </View>
       </View>
       <Text style={s.title} numberOfLines={2}>{issue.title}</Text>
@@ -45,6 +45,7 @@ const IssueCard = ({ issue, onPress, theme }) => {
 export default function PublicFeedScreen({ route, navigation }) {
   const { category: initCat } = route.params || {};
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,6 +77,11 @@ export default function PublicFeedScreen({ route, navigation }) {
   const onRefresh = () => { setRefreshing(true); fetchIssues(1, true); };
   const onLoadMore = () => { if (hasMore && !loading) fetchIssues(page + 1); };
 
+  const categoryFilters = [
+    { value: '', label: t('feed_all') },
+    ...Object.keys(CATEGORY_CONFIG).map((k) => ({ value: k, label: t(`category_${k}`) })),
+  ];
+
   return (
     <View style={s.container}>
       {/* Search */}
@@ -83,7 +89,7 @@ export default function PublicFeedScreen({ route, navigation }) {
         <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
         <TextInput
           style={s.searchInput}
-          placeholder="Search issues..."
+          placeholder={t('feed_search_placeholder')}
           placeholderTextColor={theme.colors.textSecondary}
           value={search}
           onChangeText={setSearch}
@@ -93,7 +99,7 @@ export default function PublicFeedScreen({ route, navigation }) {
       {/* Category Filter */}
       <FlatList
         horizontal
-        data={[{ value: '', label: 'All' }, ...Object.entries(CATEGORY_CONFIG).map(([k, v]) => ({ value: k, label: v.label }))]}
+        data={categoryFilters}
         keyExtractor={(i) => i.value}
         contentContainerStyle={s.filterRow}
         showsHorizontalScrollIndicator={false}
@@ -115,12 +121,13 @@ export default function PublicFeedScreen({ route, navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={!loading && <View style={s.empty}><Ionicons name="document-text-outline" size={48} color={theme.colors.textSecondary} /><Text style={s.emptyText}>No issues found</Text></View>}
+        ListEmptyComponent={!loading && <View style={s.empty}><Ionicons name="document-text-outline" size={48} color={theme.colors.textSecondary} /><Text style={s.emptyText}>{t('feed_no_issues')}</Text></View>}
         ListFooterComponent={loading && <ActivityIndicator color={COLORS.primary} style={{ margin: 20 }} />}
         renderItem={({ item }) => (
           <IssueCard
             issue={item}
             theme={theme}
+            t={t}
             onPress={() => navigation.navigate('IssueDetail', { issueId: item._id })}
           />
         )}

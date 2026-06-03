@@ -105,8 +105,8 @@ const seed = async () => {
   console.log('Admin Email: admin@publicreport.in');
   console.log('Admin Password: Admin@123');
   console.log('Officer Email: pwd.officer@publicreport.in / Password: Admin@123');
-  console.log('\n=== Citizen Login (phone-based, no OTP) ===');
-  console.log('Phone: 9876543210 (any registered phone logs in directly)');
+  console.log('\n=== Citizen OTP Login ===');
+  console.log('Phone: 9876543210 (use any 6-digit OTP in dev mode)');
 
   await mongoose.connection.close();
 };

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const STATUS_COLORS = {
   open: { bg: '#FEE2E2', color: '#DC2626' },
@@ -23,6 +24,7 @@ const CATEGORY_ICONS = {
 
 export default function IssuesPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [issues, setIssues] = useState([]);
   const [total, setTotal] = useState(0);
@@ -46,7 +48,7 @@ export default function IssuesPage() {
       const res = await adminAPI.getIssues({ ...filters, page, limit });
       setIssues(res.data.issues);
       setTotal(res.data.total);
-    } catch { toast.error('Failed to fetch issues'); }
+    } catch { toast.error(t('issues_fetch_error')); }
     setLoading(false);
   };
 
@@ -54,9 +56,9 @@ export default function IssuesPage() {
     setUpdatingId(id);
     try {
       await adminAPI.updateStatus(id, { status, note });
-      toast.success(`Status updated to ${status}`);
+      toast.success(t('issues_status_updated', { status }));
       fetchIssues();
-    } catch { toast.error('Update failed'); }
+    } catch { toast.error(t('issues_update_error')); }
     setUpdatingId(null);
   };
 
@@ -64,45 +66,61 @@ export default function IssuesPage() {
     <div style={s.filterBar}>
       <input
         style={s.searchInput}
-        placeholder="🔍 Search by title or ticket ID..."
+        placeholder={t('issues_search')}
         value={filters.search}
         onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
         onKeyDown={(e) => e.key === 'Enter' && fetchIssues()}
       />
-      {['status', 'category', 'priority'].map((key) => (
-        <select key={key} style={s.select} value={filters[key]} onChange={(e) => setFilters((f) => ({ ...f, [key]: e.target.value }))}>
-          <option value="">All {key.charAt(0).toUpperCase() + key.slice(1)}</option>
-          {key === 'status' && ['open', 'assigned', 'in_progress', 'resolved', 'closed', 'rejected'].map((v) => <option key={v} value={v}>{v.replace('_', ' ')}</option>)}
-          {key === 'category' && ['road', 'water', 'drainage', 'electricity', 'garbage', 'streetlight', 'other'].map((v) => <option key={v} value={v}>{v}</option>)}
-          {key === 'priority' && ['low', 'medium', 'high', 'critical'].map((v) => <option key={v} value={v}>{v}</option>)}
-        </select>
-      ))}
-      <button style={s.filterBtn} onClick={fetchIssues}>Apply</button>
+      <select style={s.select} value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}>
+        <option value="">{t('issues_all_status')}</option>
+        {['open', 'assigned', 'in_progress', 'resolved', 'closed', 'rejected'].map((v) => (
+          <option key={v} value={v}>{t(`status_${v}`)}</option>
+        ))}
+      </select>
+      <select style={s.select} value={filters.category} onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}>
+        <option value="">{t('issues_all_category')}</option>
+        {['road', 'water', 'drainage', 'electricity', 'garbage', 'streetlight', 'other'].map((v) => (
+          <option key={v} value={v}>{t(`category_${v}`)}</option>
+        ))}
+      </select>
+      <select style={s.select} value={filters.priority} onChange={(e) => setFilters((f) => ({ ...f, priority: e.target.value }))}>
+        <option value="">{t('issues_all_priority')}</option>
+        {['low', 'medium', 'high', 'critical'].map((v) => (
+          <option key={v} value={v}>{t(`priority_${v}`)}</option>
+        ))}
+      </select>
+      <button style={s.filterBtn} onClick={fetchIssues}>{t('issues_apply')}</button>
     </div>
   );
+
+  const HEADERS = [
+    t('issues_col_ticket'), t('issues_col_issue'), t('issues_col_category'),
+    t('issues_col_priority'), t('issues_col_status'), t('issues_col_ward'),
+    t('issues_col_reported'), t('issues_col_actions'),
+  ];
 
   return (
     <div style={s.page}>
       <div style={s.header}>
         <div>
-          <h1 style={s.pageTitle}>Issue Management</h1>
-          <p style={{ color: '#6B7280', fontSize: 14 }}>{total} total issues</p>
+          <h1 style={s.pageTitle}>{t('issues_title')}</h1>
+          <p style={{ color: '#6B7280', fontSize: 14 }}>{t('issues_total', { total })}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {filters.escalated && <span style={{ background: '#FEE2E2', color: '#DC2626', padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>⚠️ Escalated Issues</span>}
+          {filters.escalated && <span style={{ background: '#FEE2E2', color: '#DC2626', padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>{t('issues_escalated_badge')}</span>}
         </div>
       </div>
 
       {filterBar}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>Loading...</div>
+        <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>{t('issues_loading')}</div>
       ) : (
         <div style={s.tableWrap}>
           <table style={s.table}>
             <thead>
               <tr style={s.thead}>
-                {['Ticket', 'Issue', 'Category', 'Priority', 'Status', 'Ward', 'Reported', 'Actions'].map((h) => (
+                {HEADERS.map((h) => (
                   <th key={h} style={s.th}>{h}</th>
                 ))}
               </tr>
@@ -123,11 +141,11 @@ export default function IssuesPage() {
                     <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{issue.reportedBy?.name}</div>
                   </td>
                   <td style={s.td}>
-                    <span>{CATEGORY_ICONS[issue.category]} {issue.category}</span>
+                    <span>{CATEGORY_ICONS[issue.category]} {t(`category_${issue.category}`)}</span>
                   </td>
                   <td style={s.td}>
                     <span style={{ color: PRIORITY_COLORS[issue.priority], fontWeight: 700, fontSize: 13, textTransform: 'uppercase' }}>
-                      {issue.priority}
+                      {t(`priority_${issue.priority}`)}
                     </span>
                   </td>
                   <td style={s.td}>
@@ -138,7 +156,7 @@ export default function IssuesPage() {
                       disabled={updatingId === issue._id}
                     >
                       {['open', 'assigned', 'in_progress', 'resolved', 'closed', 'rejected'].map((v) => (
-                        <option key={v} value={v}>{v.replace('_', ' ')}</option>
+                        <option key={v} value={v}>{t(`status_${v}`)}</option>
                       ))}
                     </select>
                   </td>
@@ -151,7 +169,7 @@ export default function IssuesPage() {
                     </span>
                   </td>
                   <td style={s.td}>
-                    <button style={s.viewBtn} onClick={() => navigate(`/issues/${issue._id}`)}>View →</button>
+                    <button style={s.viewBtn} onClick={() => navigate(`/issues/${issue._id}`)}>{t('issues_view_btn')}</button>
                   </td>
                 </tr>
               ))}
@@ -162,9 +180,9 @@ export default function IssuesPage() {
 
       {/* Pagination */}
       <div style={s.pagination}>
-        <button style={s.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>← Prev</button>
-        <span style={{ fontSize: 14, color: '#6B7280' }}>Page {page} of {Math.ceil(total / limit)}</span>
-        <button style={s.pageBtn} onClick={() => setPage((p) => p + 1)} disabled={page >= Math.ceil(total / limit)}>Next →</button>
+        <button style={s.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>{t('issues_prev')}</button>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>{t('issues_page_of', { page, total: Math.ceil(total / limit) })}</span>
+        <button style={s.pageBtn} onClick={() => setPage((p) => p + 1)} disabled={page >= Math.ceil(total / limit)}>{t('issues_next')}</button>
       </div>
     </div>
   );
@@ -184,7 +202,7 @@ const s = {
   th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' },
   tr: { borderBottom: '1px solid #F3F4F6', transition: 'background 0.1s' },
   td: { padding: '12px 16px', fontSize: 14, color: '#374151', verticalAlign: 'middle' },
-  statusSelect: { padding: '5px 10px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize', fontFamily: 'Inter' },
+  statusSelect: { padding: '5px 10px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' },
   viewBtn: { padding: '6px 12px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' },
   pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 20 },
   pageBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' },

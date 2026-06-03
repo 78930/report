@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import IssuesPage from './pages/IssuesPage';
@@ -9,22 +10,24 @@ import IssueDetailPage from './pages/IssueDetailPage';
 import UsersPage from './pages/UsersPage';
 import DepartmentsPage from './pages/DepartmentsPage';
 
-const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/issues', label: 'Issues', icon: '📋' },
-  { path: '/users', label: 'Users', icon: '👥' },
-  { path: '/departments', label: 'Departments', icon: '🏢' },
-];
-
 function Sidebar({ onLogout }) {
   const location = useLocation();
+  const { t, language, changeLanguage, languages } = useLanguage();
+
+  const NAV_ITEMS = [
+    { path: '/dashboard', label: t('nav_dashboard'), icon: '📊' },
+    { path: '/issues', label: t('nav_issues'), icon: '📋' },
+    { path: '/users', label: t('nav_users'), icon: '👥' },
+    { path: '/departments', label: t('nav_departments'), icon: '🏢' },
+  ];
+
   return (
     <aside style={sidebarStyle}>
       <div style={logoStyle}>
         <span style={{ fontSize: 24 }}>🛡️</span>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 16, color: '#fff' }}>CivicReport</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Admin Panel</div>
+          <div style={{ fontWeight: 800, fontSize: 16, color: '#fff' }}>{t('app_name')}</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{t('admin_panel')}</div>
         </div>
       </div>
       <nav style={{ flex: 1, padding: '8px 12px' }}>
@@ -35,9 +38,39 @@ function Sidebar({ onLogout }) {
           </Link>
         ))}
       </nav>
+
+      {/* Language Switcher */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {t('language')}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => changeLanguage(lang.code)}
+              style={{
+                flex: 1,
+                padding: '5px 4px',
+                borderRadius: 6,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: language === lang.code ? 700 : 400,
+                background: language === lang.code ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
+                color: language === lang.code ? '#fff' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.15s',
+              }}
+            >
+              {lang.nativeLabel}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <button onClick={onLogout} style={logoutBtnStyle}>
-          🚪 Logout
+          🚪 {t('nav_logout')}
         </button>
       </div>
     </aside>
@@ -59,24 +92,21 @@ function ProtectedRoute({ children, isAuthenticated }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
-export default function App() {
+function AppRoutes() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('admin_token'));
-  const [admin, setAdmin] = useState(null);
 
   const handleLogin = (token, user) => {
     localStorage.setItem('admin_token', token);
     setIsAuthenticated(true);
-    setAdmin(user);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     setIsAuthenticated(false);
-    setAdmin(null);
   };
 
   return (
-    <Router>
+    <>
       <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Inter', fontSize: 14 } }} />
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage onLogin={handleLogin} />} />
@@ -95,7 +125,17 @@ export default function App() {
           </ProtectedRoute>
         } />
       </Routes>
-    </Router>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </LanguageProvider>
   );
 }
 
